@@ -1,95 +1,58 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+"use client"
+
+import React, { useState, useEffect } from "react";
+import Header from '@/components/header';
+import Summary from '@/components/summary';
+import Form from '@/components/form';
+import Global from '@/styles/global';
 
 export default function Home() {
+  const data = localStorage.getItem("transactions");
+  const [transactionsList, setTransactionsList] = useState(
+    data ? JSON.parse(data) : []
+  );
+
+  const [income, setIncome] = useState(0);
+  const [expense, setExpense] = useState(0);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    const amountExpense = transactionsList
+      .filter((item) => item.expense)
+      .map((transaction) => Number(transaction.amount));
+
+    const amountIncome = transactionsList  
+      .filter((item) => !item.expense)
+      .map((transaction) => Number(transaction.amount));
+
+    const expense = amountExpense.reduce((acc, cur) => acc + cur, 0).toFixed(2);
+    const income = amountIncome.reduce((acc, cur) => acc + cur, 0).toFixed(2);  
+
+    const total = Math.abs(income - expense).toFixed(2);
+
+    setIncome(`R$ ${income}`);
+    setExpense(`R$ ${expense}`);
+    setTotal(`R$ ${Number(income) < Number(expense) ? "-" : ""} R$ ${total}`);
+  }, [transactionsList]);
+
+  const handleAdd = (transaction) => {
+    const newArrayTransactions = [...transactionsList, transaction];
+
+    setTransactionsList(newArrayTransactions);
+
+    localStorage.setItem("transactions", JSON.stringify(newArrayTransactions));
+  };
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>src/app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+    <>
+      <Header />
+      <Summary income={income} expense={expense} total={total} />
+      <Form 
+        handleAdd={handleAdd} 
+        transactionsList={transactionsList}
+        setTransactionsList={setTransactionsList}
         />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+      <Global />
+    </>
   )
 }
